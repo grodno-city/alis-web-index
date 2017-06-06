@@ -1,4 +1,17 @@
 
+//need to change processItems function in alis-web-request module
+// function processItems(options, callback) {
+//   if (!options) {
+//     return process.nextTick(callback, new Error('options is not provided'));
+//   }
+//   getPage({ url: options.url, jar: options.jar }, (err, body) => {
+//     const $ = parsePage(body);
+//     let books = getItems($)
+//     const nextPageUrl = getNextPageUrl($);
+//     return callback(null, nextPageUrl, books );
+//   });
+// }
+
 import elasticsearch from 'elasticsearch';
 import Stream from 'stream';
 import { sendInitialQuery, getNumberedPageUrls, run, processItems, parsePage} from '@grodno-city/alis-web-request';
