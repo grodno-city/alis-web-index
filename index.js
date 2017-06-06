@@ -1,10 +1,7 @@
-// var elasticsearch = require('elasticsearch');
-// var express = require('express');
+
 import elasticsearch from 'elasticsearch';
 import Stream from 'stream';
-import { sendInitialQuery, getNumberedPageUrls, run, processItems, parsePage, ReadableStreamItems } from '@grodno-city/alis-web-request';
-
-const WritableStreamItems = new Stream.Writable({ objectMode: true });
+import { sendInitialQuery, getNumberedPageUrls, run, processItems, parsePage} from '@grodno-city/alis-web-request';
 
 var client = new elasticsearch.Client({
   host: 'localhost:9200',
@@ -21,10 +18,9 @@ client.ping({
   }
 });
 
-ReadableStreamItems.pipe(WritableStreamItems);
 
 const initParams = {
-  year: 2017,
+  year: 1960,
   alisEndpoint: 'http://86.57.174.45',
 };
 
@@ -39,37 +35,28 @@ sendInitialQuery(initParams, (err, res) => {
   };
   const $ = parsePage(res.page);
   const firstNumberedPageUrls = getNumberedPageUrls($);
+  let remainingQueue = firstNumberedPageUrls;
+  processItems({ url: `${options.alisEndpoint}/alis/EK/${remainingQueue[0]}`, jar: options.jar}, (err, nextPageUrl, books) => {
+    if (err) {
+      return err;
+    }
+    remainingQueue = remainingQueue.slice(1);
+    if (remainingQueue.length === 1) {
+      remainingQueue.push(`${nextPageUrl}`);
+    }
+    console.log('q : ', remainingQueue);
+    //create index here
+    // books.map((item)=>{
+    //   client.index({
+    //     index: 'book',
+    //     type: 'temp',
+    //     body:{
+    //       'id':item.id,
+    //       'title': item.title
+    //     },
+    //   }).then(function(body){console.log('body',body)})
+    // })
 
-  run(processItems, firstNumberedPageUrls, options);
+  });
+
 });
-
-const items = [];
-
-WritableStreamItems._write = (item, encoding, done) => {
-  items.push(item);
-  client.index({
-    index: 'book',
-    type:'sometype',
-    body:{
-      'id':item.id,
-      'title': item.title
-    },
-  }).then(function(body){console.log('body',body)})
-
-
-  done();
-
-};
-
-//
-//  client.search({
-//   index: 'book',
-//   type:'detective',
-//   body: {
-//     query: {
-//       match: {
-//         title: 'rabbit'
-//       }
-//     }
-//   }
-// }).then(function(body){console.log(body); console.log(body.hits.hits)})
