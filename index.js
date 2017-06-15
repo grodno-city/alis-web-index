@@ -1,23 +1,27 @@
 
 import elasticsearch from 'elasticsearch';
 import { getRecordsByQuery } from '@grodno-city/alis-web-request';
-import
+import bunyan from 'bunyan';
+
+let log = bunyan.createLogger({ name: 'ids' });
 
 const client = new elasticsearch.Client({
   host: 'localhost:9200',
 });
 client.ping({ requestTimeout: 1000 }, function (error) {
   if (error) {
-    console.trace('elasticsearch cluster is down!');
+    log.warn('elasticsearch cluster is down!');
   } else {
-    console.log('All is well');
+    log.info('All is well');
   }
 });
+
 function indexRecordsByQuery(options) {
   getRecordsByQuery(options, (err, memo)=>{
     if(!err) {
+      log.info({ memo.length });
       memo.map((item)=>{
-        indexItem(item, 'Все', year);
+        indexItem(item, options.recordType, year);
       })
     }
   });
@@ -41,6 +45,10 @@ function indexItem(item, type, year){
       'year': year,
     }
   }, (err, response) => {
-    if (err) throw err;
+    if (!err) {
+      log.info({ id: item.id, status: 'done' });
+      return;
+    }
+    log.warn({ id: item.id, status: 'none' });
   })
 }

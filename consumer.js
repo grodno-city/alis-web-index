@@ -1,17 +1,20 @@
 import { indexRecordsByQuery, getDocument } from './indedx';
+import bunyan from 'bunyan';
+
+let log = bunyan.createLogger({ name: 'consumer' });
 
 const options={
   query: 2017,
   queryType: 'Год издания',
-  recordsType: 'Все',
+  recordType: 'Все',
   alisEndpoint: 'http://86.57.174.45',
 }
 indexRecordsByQuery(options);
 getDocument('H87734391', 'Все', (err, response)=>{
   if(!err){
-    console.log(response);
+    log.info(response);
   }
   else {
-    console.log(err.message);
+    log.warn(err.message);
   }
 });
