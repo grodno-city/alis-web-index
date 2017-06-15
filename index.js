@@ -21,9 +21,14 @@ export function indexRecordsByQuery(options) {
     if(!err) {
       let all = memo.length;
       log.info({ all });
+      let body = [];
       memo.map((item)=>{
-        indexItem(item, options.recordType, options.year);
-      })
+        body.push({ index: { '_index':'records', '_type': options.recordType, '_id': item.id}});
+        body.push({ 'title': item.title, 'year': options.query });
+      });
+      client.bulk({body: body}, (err, result)=>{
+        if(err) log.warn(err);
+      });
     }
   });
 }
@@ -50,6 +55,6 @@ export function indexItem(item, type, year){
       log.info({ id: item.id, status: 'done' });
       return;
     }
-    log.warn({ id: item.id, status: 'none' });
+    log.warn({ id: item.id, status: 'none' , err: err.message});
   })
 }
