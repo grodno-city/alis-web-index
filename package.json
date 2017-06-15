@@ -14,7 +14,7 @@
     "babel-preset-es2015": "^6.24.1"
   },
   "scripts": {
-    "start": "babel-node -- consumer.js | bunyan -l warn> log.txt",
+    "start": "babel-node -- consumer.js | bunyan -l warn >> log.txt",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

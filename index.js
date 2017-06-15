@@ -20,7 +20,8 @@ export function indexRecordsByQuery(options) {
   getRecordsByQuery(options, (err, memo)=>{
     if(!err) {
       let all = memo.length;
-      log.info({ all });
+      let year = options.query;
+      log.warn({all, year});
       let body = [];
       memo.map((item)=>{
         body.push({ index: { '_index':'records', '_type': options.recordType, '_id': item.id}});
