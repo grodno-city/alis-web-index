@@ -1,12 +1,18 @@
 
 import elasticsearch from 'elasticsearch';
-import Stream from 'stream';
-import { getRecordsByQuery} from '@grodno-city/alis-web-request';
+import { getRecordsByQuery } from '@grodno-city/alis-web-request';
+import
 
-let client = new elasticsearch.Client({
+const client = new elasticsearch.Client({
   host: 'localhost:9200',
 });
-
+client.ping({ requestTimeout: 1000 }, function (error) {
+  if (error) {
+    console.trace('elasticsearch cluster is down!');
+  } else {
+    console.log('All is well');
+  }
+});
 function indexRecordsByQuery(options) {
   getRecordsByQuery(options, (err, memo)=>{
     if(!err) {
