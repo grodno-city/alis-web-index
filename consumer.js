@@ -1,4 +1,4 @@
-import { indexRecordsByQuery, getDocument } from './indedx';
+import { indexRecordsByQuery, getDocument } from './index';
 import bunyan from 'bunyan';
 
 let log = bunyan.createLogger({ name: 'consumer' });

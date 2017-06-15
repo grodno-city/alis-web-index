@@ -12,22 +12,23 @@ client.ping({ requestTimeout: 1000 }, function (error) {
   if (error) {
     log.warn('elasticsearch cluster is down!');
   } else {
-    log.info('All is well');
+    log.info('elasticsearch cluster is up');
   }
 });
 
-function indexRecordsByQuery(options) {
+export function indexRecordsByQuery(options) {
   getRecordsByQuery(options, (err, memo)=>{
     if(!err) {
-      log.info({ memo.length });
+      let all = memo.length;
+      log.info({ all });
       memo.map((item)=>{
-        indexItem(item, options.recordType, year);
+        indexItem(item, options.recordType, options.year);
       })
     }
   });
 }
 
-function getDocument(id, type, callback){
+export function getDocument(id, type, callback){
   client.get({
     index: 'records',
     type: type,
@@ -35,7 +36,7 @@ function getDocument(id, type, callback){
   }, callback);
 }
 
-function indexItem(item, type, year){
+export function indexItem(item, type, year){
   client.index({
     index: 'records',
     id:item.id,
