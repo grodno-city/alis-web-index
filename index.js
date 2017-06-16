@@ -25,6 +25,45 @@ export function indexRecordsByQuery(client, options, callback) {
   });
 }
 
+export function searchItems(query,callback ){
+  client.search({
+    index: 'records',
+    type: type,
+    '_source': 'year',
+  },callback)
+};
+
+export function createIndex(indexName, client, callback){
+  var settings = {
+    "analysis": {
+      "filter": {
+        "ru_stop": {
+          "type": "stop",
+          "stopwords": "_russian_"
+        },
+        "ru_stemmer": {
+          "type": "stemmer",
+          "language": "russian"
+        }
+      },
+      "analyzer": {
+        "default": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "ru_stop",
+            "ru_stemmer"
+          ]
+        }
+      }
+    }
+};
+  client.indices.create({
+    index: indexName,
+    settings: settings
+  }, callback)
+}
+
 export function getDocument(id, type, callback){
   client.get({
     index: 'records',
