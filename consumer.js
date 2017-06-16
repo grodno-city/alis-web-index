@@ -1,29 +1,22 @@
 import { indexRecordsByQuery } from './index';
 import elasticsearch from 'elasticsearch';
 import bunyan from 'bunyan';
-import queryMap from '@grodno-city/alis-web-request/lib/queryMap';
+import { recordTypes } from '@grodno-city/alis-web-request';
 import eachOfSeries from 'async/eachOfSeries';
 
 const client = new elasticsearch.Client({
   host: 'localhost:9200',
 });
-client.ping({ requestTimeout: 1000 }, function (error) {
-  if (error) {
-    log.warn('elasticsearch cluster is down!');
-  } else {
-    log.info('elasticsearch cluster is up');
-  }
-});
 
 let log = bunyan.createLogger({ name: 'consumer' });
 let options={
-  query: 2014,
+  query: 2009,
   queryType: 'Год издания',
   recordType: 'Все',
   index: 'records',
   alisEndpoint: 'http://86.57.174.45',
 }
-let types = Object.keys(queryMap.recordType);
+let types = Object.keys(recordTypes);
 types.shift();
 function indexByType(value,key,callback){
   options.recordType = value;
