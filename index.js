@@ -1,21 +1,10 @@
-import elasticsearch from 'elasticsearch';
 import { getRecordsByQuery } from '@grodno-city/alis-web-request';
 import bunyan from 'bunyan';
 
 let log = bunyan.createLogger({ name: 'ids' });
 
-const client = new elasticsearch.Client({
-  host: 'localhost:9200',
-});
-client.ping({ requestTimeout: 1000 }, function (error) {
-  if (error) {
-    log.warn('elasticsearch cluster is down!');
-  } else {
-    log.info('elasticsearch cluster is up');
-  }
-});
 
-export function indexRecordsByQuery(options, callback) { 
+export function indexRecordsByQuery(client, options, callback) {
   getRecordsByQuery(options, (err, memo)=>{
     if(!err) {
       if(memo == undefined){
@@ -24,7 +13,7 @@ export function indexRecordsByQuery(options, callback) {
       log.warn(memo.length, options.query, options.recordType);
       let body = [];
       memo.map((item)=>{
-        body.push({ index: { '_index':'records2', '_type': options.recordType, '_id': item.id}});
+        body.push({ index: { '_index': options.index, '_type': options.recordType, '_id': item.id}});
         body.push({ 'title': item.title, 'year': options.query });
       });
       client.bulk({body: body}, (err, result)=>{
