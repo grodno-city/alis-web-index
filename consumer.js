@@ -4,8 +4,8 @@ import queryMap from '@grodno-city/alis-web-request/lib/queryMap';
 import eachOfSeries from 'async/eachOfSeries';
 
 let log = bunyan.createLogger({ name: 'consumer' });
-  query: 2016,
 let options={
+  query: 2016,
   queryType: 'Год издания',
   recordType: 'Все',
   alisEndpoint: 'http://86.57.174.45',
@@ -24,6 +24,6 @@ function indexByType(value,key,callback){
   });
 }
 
-eachOfSeries(types, makeOptions, (err)=>{
+eachOfSeries(types, indexByType, (err)=>{
   if(err) log.warn(err);
 })
