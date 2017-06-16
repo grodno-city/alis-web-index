@@ -18,6 +18,9 @@ client.ping({ requestTimeout: 1000 }, function (error) {
 export function indexRecordsByQuery(options, callback) { 
   getRecordsByQuery(options, (err, memo)=>{
     if(!err) {
+      if(memo == undefined){
+        return callback(new Error('alis-web err'));
+      }
       log.warn(memo.length, options.query, options.recordType);
       let body = [];
       memo.map((item)=>{

@@ -25,5 +25,5 @@ function indexByType(value,key,callback){
 }
 
 eachOfSeries(types, indexByType, (err)=>{
-  if(err) log.warn(err);
+  if(err) log.warn(err.message);
 })
