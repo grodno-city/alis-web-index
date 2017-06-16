@@ -1,4 +1,3 @@
-
 import elasticsearch from 'elasticsearch';
 import { getRecordsByQuery } from '@grodno-city/alis-web-request';
 import bunyan from 'bunyan';
@@ -16,21 +15,21 @@ client.ping({ requestTimeout: 1000 }, function (error) {
   }
 });
 
-export function indexRecordsByQuery(options) {
+export function indexRecordsByQuery(options, callback) { 
   getRecordsByQuery(options, (err, memo)=>{
     if(!err) {
-      let all = memo.length;
-      let year = options.query;
-      log.warn({all, year});
+      log.warn(memo.length, options.query, options.recordType);
       let body = [];
       memo.map((item)=>{
-        body.push({ index: { '_index':'records', '_type': options.recordType, '_id': item.id}});
+        body.push({ index: { '_index':'records2', '_type': options.recordType, '_id': item.id}});
         body.push({ 'title': item.title, 'year': options.query });
       });
       client.bulk({body: body}, (err, result)=>{
-        if(err) log.warn(err);
+        if(err) callback(err);
+        else callback();
       });
     }
+    else callback(err);
   });
 }
 
