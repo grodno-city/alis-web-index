@@ -1,2 +1,0 @@
-[2017-06-15T15:01:15.842Z]  WARN: ids/24157 on hannakazello:  (all=50, year=2017)
-[2017-06-15T15:04:59.117Z]  WARN: ids/24194 on hannakazello:  (all=3082, year=2016)
