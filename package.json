@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "@grodno-city/alis-web-request": "1.0.1",
+    "@grodno-city/alis-web-request": "1.0.2",
     "bunyan": "^1.8.10",
     "elasticsearch": "^13.0.1",
     "express": "^4.15.3"
@@ -18,7 +18,7 @@
     "eslint-plugin-import": "^2.3.0"
   },
   "scripts": {
-    "start": "babel-node -- ./consumer.js | bunyan",
+    "start": "babel-node -- consumer.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint index.js"
   },
