@@ -1,23 +1,23 @@
-import { getRecordsByQuery } from '@grodno-city/alis-web-request';
-import bunyan from 'bunyan';
+import { getRecordsByQuery, recordTypes } from '@grodno-city/alis-web-request';
+import eachOfSeries from 'async/eachOfSeries';
+import { log, client, alisEndpoint, index } from './config';
+import indexSettings from './indexSettings.json';
 
-let log = bunyan.createLogger({ name: 'ids' });
 
-
-export function indexRecordsByQuery(client, options, callback) {
-  getRecordsByQuery(options, (err, memo)=>{
-    if(!err) {
-      if(memo == undefined){
+export function indexRecordsByQuery(options, callback) {
+  getRecordsByQuery(options, (err, memo) => {
+    if (!err) {
+      if (memo === undefined) {
         return callback(new Error('alis-web err'));
       }
       log.warn(memo.length, options.query, options.recordType);
-      let body = [];
-      memo.map((item)=>{
+      const body = [];
+      memo.map((item) => {
         body.push({ index: { '_index': options.index, '_type': options.recordType, '_id': item.id}});
         body.push({ 'title': item.title, 'year': options.query });
       });
-      client.bulk({body: body}, (err, result)=>{
-        if(err) callback(err);
+      client.bulk({ body }, (esErr) => {
+        if(esErr) callback(esErr);
         else callback();
       });
     }
@@ -25,67 +25,65 @@ export function indexRecordsByQuery(client, options, callback) {
   });
 }
 
-export function searchItems(query,callback ){
-  client.search({
-    index: 'records',
-    type: type,
-    '_source': 'year',
-  },callback)
-};
-
-export function createIndex(indexName, client, callback){
-  var settings = {
-    "analysis": {
-      "filter": {
-        "ru_stop": {
-          "type": "stop",
-          "stopwords": "_russian_"
-        },
-        "ru_stemmer": {
-          "type": "stemmer",
-          "language": "russian"
-        }
-      },
-      "analyzer": {
-        "default": {
-          "tokenizer": "standard",
-          "filter": [
-            "lowercase",
-            "ru_stop",
-            "ru_stemmer"
-          ]
-        }
+export function indexByType(year, type, key, next) {
+  const options = {
+    query: year,
+    queryType: 'Год издания',
+    recordType: type,
+    index,
+    alisEndpoint,
+  };
+  console.log(typeof next);
+  indexRecordsByQuery(options, (err) => {
+    if (err) {
+      if (err.message === 'no match') {
+        log.warn(type, err.message);
+        return next();
       }
+      return next(err);
     }
-};
-  client.indices.create({
-    index: indexName,
-    settings: settings
-  }, callback)
+    return next();
+  });
 }
 
-export function getDocument(id, type, callback){
-  client.get({
-    index: 'records',
-    type: type,
-    id: id
+export function indexByYear(year) {
+  const types = Object.keys(recordTypes);
+  types.shift();
+
+  eachOfSeries(types, indexByType.bind(null, year), (err) => {
+    if (err) log.warn(err.message);
+  });
+}
+
+export function createIndex(indexName, callback) {
+  client.indices.create({
+    index: indexName,
+    settings: indexSettings,
   }, callback);
 }
 
-export function indexItem(item, type, year){
+export function getDocument(id, type, callback) {
+  client.get({
+    index: 'records',
+    type,
+    id,
+  }, callback);
+}
+
+export function indexItem(item, type, year) {
   client.index({
     index: 'records',
-    id:item.id,
-    type: type,
-    body:{
+    id: item.id,
+    type,
+    body: {
       'title': item.title,
       'year': year,
-    }
-  }, (err, response) => {
+    },
+  }, (err) => {
     if (!err) {
       log.info({ id: item.id, status: 'done' });
       return;
     }
-    log.warn({ id: item.id, status: 'none' , err: err.message});
-  })
+    log.warn({ id: item.id, status: 'none', err: err.message });
+  });
 }
