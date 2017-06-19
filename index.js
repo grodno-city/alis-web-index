@@ -33,7 +33,7 @@ export function indexByType(year, type, key, next) {
     index,
     alisEndpoint,
   };
-  console.log(typeof next);
+
   indexRecordsByQuery(options, (err) => {
     if (err) {
       if (err.message === 'no match') {
