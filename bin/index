@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-./node_modules/.bin/babel-node -- consumer.js | tee >(grep msg > log.txt) >(grep type > log.json)
+./node_modules/.bin/babel-node -- consumer.js | tee >(grep -v type > log.txt) >(grep type > log.json)
