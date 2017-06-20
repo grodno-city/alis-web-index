@@ -10,14 +10,13 @@ export function indexRecordsByQuery(options, callback) {
       if (memo === undefined) {
         return callback(new Error('alis-web err'));
       }
-      log.warn(memo.length, options.query, options.recordType);
       const body = [];
       memo.map((item) => {
         body.push({ index: { '_index': options.index, '_type': options.recordType, '_id': item.id}});
         body.push({ 'title': item.title, 'year': options.query });
       });
       client.bulk({ body }, (esErr) => {
-        if(esErr) callback(esErr);
+        if (esErr) callback(esErr);
         else callback();
       });
     }
@@ -37,11 +36,15 @@ export function indexByType(year, type, key, next) {
   indexRecordsByQuery(options, (err) => {
     if (err) {
       if (err.message === 'no match') {
-        log.warn(type, err.message);
+        takeSnap(options);
+        collectRequestInfo(options, 'OK');
         return next();
       }
+      collectRequestInfo(options, err.message);
       return next(err);
     }
+    takeSnap(options);
+    collectRequestInfo(options, 'OK');
     return next();
   });
 }
@@ -53,6 +56,12 @@ export function indexByYear(year) {
   eachOfSeries(types, indexByType.bind(null, year), (err) => {
     if (err) log.warn(err.message);
   });
+}
+
+export function takeSnap(options) {
+  const year = options.query;
+  const type = options.recordType;
+  log.warn({ year, type });
 }
 
 export function createIndex(indexName, callback) {
@@ -70,20 +79,16 @@ export function getDocument(id, type, callback) {
   }, callback);
 }
 
-export function indexItem(item, type, year) {
+export function collectRequestInfo(options, result) {
   client.index({
-    index: 'records',
-    id: item.id,
-    type,
+    index: 'requests',
+    type: result,
     body: {
-      'title': item.title,
-      'year': year,
+      'options': options,
+      'result': result,
+      'time': new Date(),
     },
   }, (err) => {
-    if (!err) {
-      log.info({ id: item.id, status: 'done' });
-      return;
-    }
-    log.warn({ id: item.id, status: 'none', err: err.message });
+    if (err) log.warn(err.message);
   });
 }
