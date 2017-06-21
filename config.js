@@ -8,4 +8,4 @@ export const client = new elasticsearch.Client({
 export const log = bunyan.createLogger({ name: 'index' });
 
 export const alisEndpoint = 'http://86.57.174.45';
-export const index = 'records';
+export const index = 'books';
