@@ -9,7 +9,7 @@ let id = 0;
 let count = 0;
 try {
   const args = fs.readFileSync(snapshot, 'utf8').split(' ');
-  id = Number(args[0]);
+  id = Number(args[0]) + 1;
   count = Number(args[1]);
 }
 catch (err) {
@@ -22,14 +22,18 @@ function indexRecord(next) {
   getRecordByID(alisEndpoint, id, (err, record) => {
     if (err) {
       if (err.message === 'Record not found') {
+        fs.writeFileSync(snapshot, `${id} ${count}`);
         id += 1;
         emptyId += 1;
-        fs.writeFileSync(snapshot, `${id} ${count}`);
         collectRequestInfo(id, alisEndpoint, err.message);
         return next();
       }
       collectRequestInfo(id, alisEndpoint, err.message);
       return next(err);
+    }
+    if(Object.keys(record).includes('')){
+      record.empty = record[''];
+      delete record[''];
     }
     client.index({
       index,
@@ -43,8 +47,7 @@ function indexRecord(next) {
     });
     id += 1;
     emptyId = 0;
-    count += 1;
-    fs.writeFileSync(snapshot, `${id} ${count}`);
+    fs.writeFileSync(snapshot, `${record.id} ${count + 1}`);
     collectRequestInfo(id, alisEndpoint, 'OK');
     return next();
   });
