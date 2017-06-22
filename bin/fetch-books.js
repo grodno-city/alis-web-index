@@ -18,6 +18,25 @@ catch (err) {
 }
 let emptyId = 0;
 
+function save(record, next) {
+  client.index({
+    index,
+    type: 'info',
+    id: record.id,
+    body: {
+      record,
+    },
+  }, (indexErr) => {
+    if (indexErr) return next(indexErr);
+    id += 1;
+    emptyId = 0;
+    count += 1;
+    fs.writeFileSync(snapshot, `${record.id} ${count}`);
+    collectRequestInfo(id, alisEndpoint, 'OK');
+    return next();
+  });
+}
+
 function indexRecord(next) {
   getRecordByID(alisEndpoint, id, (err, record) => {
     if (err) {
@@ -35,21 +54,7 @@ function indexRecord(next) {
       record.empty = record[''];
       delete record[''];
     }
-    client.index({
-      index,
-      type: 'info',
-      id: record.id,
-      body: {
-        record,
-      },
-    }, (indexErr) => {
-      if (indexErr) log.warn({ id }, indexErr.message);
-    });
-    id += 1;
-    emptyId = 0;
-    fs.writeFileSync(snapshot, `${record.id} ${count + 1}`);
-    collectRequestInfo(id, alisEndpoint, 'OK');
-    return next();
+    save(record, next);
   });
 }
 whilst(() => {
