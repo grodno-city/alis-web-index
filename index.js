@@ -1,4 +1,4 @@
-import { getRecordsByQuery, recordTypes } from '@grodno-city/alis-web-request';
+import { getRecordsByQuery, recordTypes, getRecordByID } from '@grodno-city/alis-web-request';
 import eachOfSeries from 'async/eachOfSeries';
 import { log, client, alisEndpoint, index } from './config';
 import indexSettings from './indexSettings.json';
@@ -71,12 +71,13 @@ export function getDocument(id, type, callback) {
   }, callback);
 }
 
-export function collectRequestInfo(options, result) {
+export function collectRequestInfo(id, alisEndpoint, result) {
   client.index({
     index: 'requests',
     type: result,
     body: {
-      'options': options,
+      'record_id': id,
+      'alisEndpoint': alisEndpoint,
       'result': result,
       'time': new Date(),
     },

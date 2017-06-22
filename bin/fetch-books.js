@@ -25,10 +25,10 @@ function indexRecord(next) {
         id += 1;
         emptyId += 1;
         fs.writeFileSync(snapshot, `${id} ${count}`);
-        collectRequestInfo(id, err.message);
+        collectRequestInfo(id, alisEndpoint, err.message);
         return next();
       }
-      collectRequestInfo(id, err.message);
+      collectRequestInfo(id, alisEndpoint, err.message);
       return next(err);
     }
     client.index({
@@ -44,7 +44,7 @@ function indexRecord(next) {
     emptyId = 0;
     count += 1;
     fs.writeFileSync(snapshot, `${id} ${count}`);
-    collectRequestInfo(id, 'OK');
+    collectRequestInfo(id, alisEndpoint, 'OK');
     return next();
   });
 }
