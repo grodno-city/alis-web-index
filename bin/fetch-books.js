@@ -5,9 +5,10 @@ import { log, alisEndpoint, index, client } from '../config';
 import { collectRequestInfo } from '../index';
 
 const snapshot = './bin/.fetch-books-snapshot';
-let id=0, count=0;
+let id = 0;
+let count = 0;
 try {
-  let args = fs.readFileSync(snapshot, 'utf8').split(' ');
+  const args = fs.readFileSync(snapshot, 'utf8').split(' ');
   id = Number(args[0]);
   count = Number(args[1]);
 }
@@ -15,7 +16,6 @@ catch (err) {
   id = 0;
   count = 0;
 }
-
 let emptyId = 0;
 
 function indexRecord(next) {
@@ -34,11 +34,12 @@ function indexRecord(next) {
     client.index({
       index,
       type: 'info',
+      id: record.id,
       body: {
-        record
+        record,
       },
     }, (indexErr) => {
-      if (indexErr) log.warn(indexErr.message);
+      if (indexErr) log.warn({ id }, indexErr.message);
     });
     id += 1;
     emptyId = 0;
@@ -51,5 +52,5 @@ function indexRecord(next) {
 whilst(() => {
   return emptyId < 1000;
 }, indexRecord, (err) => {
-  if (err) log.warn(err.message);
+  if (err) log.warn({ id }, err.message);
 });
