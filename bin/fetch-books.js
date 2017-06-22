@@ -1,50 +1,55 @@
 import whilst from 'async/whilst';
-import { recordTypes } from '@grodno-city/alis-web-request';
+import { getRecordByID } from '@grodno-city/alis-web-request';
 import fs from 'fs';
-import { log, alisEndpoint, index } from '../config';
-import { indexRecordsByQuery, collectRequestInfo } from '../index';
+import { log, alisEndpoint, index, client } from '../config';
+import { collectRequestInfo } from '../index';
 
 const snapshot = './bin/.fetch-books-snapshot';
-let year;
+let id=0, count=0;
 try {
-  year = fs.readFileSync(snapshot, 'utf8').substr(0, 4);
+  let args = fs.readFileSync(snapshot, 'utf8').split(' ');
+  id = Number(args[0]);
+  count = Number(args[1]);
 }
 catch (err) {
-  year = (new Date()).getFullYear();
+  id = 0;
+  count = 0;
 }
 
-let emptyYear = 0;
+let emptyId = 0;
 
-function indexYear(next) {
-  const options = {
-    query: year,
-    queryType: 'Год издания',
-    recordType: Object.keys(recordTypes)[1],
-    index,
-    alisEndpoint,
-  };
-  indexRecordsByQuery(options, (err, all) => {
-    log.info(year, all);
+function indexRecord(next) {
+  getRecordByID(alisEndpoint, id, (err, record) => {
     if (err) {
-      if (err.message === 'no match') {
-        year -= 1;
-        emptyYear += 1;
-        fs.writeFileSync(snapshot, year);
-        collectRequestInfo(options, 'OK');
+      if (err.message === 'Record not found') {
+        id += 1;
+        emptyId += 1;
+        fs.writeFileSync(snapshot, `${id} ${count}`);
+        collectRequestInfo(id, err.message);
         return next();
       }
-      collectRequestInfo(options, err.message);
+      collectRequestInfo(id, err.message);
       return next(err);
     }
-    year -= 1;
-    emptyYear = 0;
-    fs.writeFileSync(snapshot, year);
-    collectRequestInfo(options, 'OK');
+    client.index({
+      index,
+      type: 'info',
+      body: {
+        record
+      },
+    }, (indexErr) => {
+      if (indexErr) log.warn(indexErr.message);
+    });
+    id += 1;
+    emptyId = 0;
+    count += 1;
+    fs.writeFileSync(snapshot, `${id} ${count}`);
+    collectRequestInfo(id, 'OK');
     return next();
   });
 }
 whilst(() => {
-  return emptyYear < 10;
-}, indexYear, (err) => {
+  return emptyId < 1000;
+}, indexRecord, (err) => {
   if (err) log.warn(err.message);
 });
