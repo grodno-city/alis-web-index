@@ -29,25 +29,6 @@ function indexRecord(record, callback) {
   }, callback);
 }
 
-function fix(record) {
-  for (let key in record) {
-    if (typeof record[key] === 'object') {
-      for( let k in record[key]) {
-        if (k.endsWith(' .')) {
-          const newKey = k.slice(0, k.length - 2);
-          record[key][newKey] = record[key][k];
-          delete record[key][k];
-        }
-      }
-    }
-  }
-  if(Object.keys(record).includes('')){
-    record.empty = record[''];
-    delete record[''];
-  }
-  return record;
-}
-
 function FetchAndIndexRecord(options, callback) {
   getRecordByID(options.alisEndpoint, options.id, (err, record) => {
     if (err) {
@@ -56,7 +37,6 @@ function FetchAndIndexRecord(options, callback) {
       }
       return callback(err);
     }
-    record = fix(record);
     indexRecord(record, callback);
   });
 }

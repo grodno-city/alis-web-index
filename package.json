@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "@grodno-city/alis-web-request": "1.0.3",
+    "@grodno-city/alis-web-request": "1.0.4",
     "async": "^2.4.1",
     "bunyan": "^1.8.10",
     "elasticsearch": "^13.0.1",
