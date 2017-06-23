@@ -16,9 +16,9 @@ catch (err) {
   id = 0;
   count = 0;
 }
-let emptyId = 0;
+let consistentlyEmptyIdCount = 0;
 
-function save(record, next) {
+function indexRecord(record, callback) {
   client.index({
     index,
     type: 'info',
@@ -26,39 +26,57 @@ function save(record, next) {
     body: {
       record,
     },
-  }, (indexErr) => {
-    if (indexErr) return next(indexErr);
-    id += 1;
-    emptyId = 0;
-    count += 1;
-    fs.writeFileSync(snapshot, `${record.id} ${count}`);
-    collectRequestInfo(id, alisEndpoint, 'OK');
-    return next();
-  });
+  }, callback);
 }
 
-function indexRecord(next) {
-  getRecordByID(alisEndpoint, id, (err, record) => {
+function fix(record) {
+  for (let key in record) {
+    if (typeof record[key] === 'object') {
+      for( let k in record[key]) {
+        if (k.endsWith(' .')) {
+          const newKey = k.slice(0, k.length - 2);
+          record[key][newKey] = record[key][k];
+          delete record[key][k];
+        }
+      }
+    }
+  }
+  if(Object.keys(record).includes('')){
+    record.empty = record[''];
+    delete record[''];
+  }
+  return record;
+}
+
+function FetchAndIndexRecord(options, callback) {
+  getRecordByID(options.alisEndpoint, options.id, (err, record) => {
     if (err) {
       if (err.message === 'Record not found') {
-        fs.writeFileSync(snapshot, `${id} ${count}`);
-        id += 1;
-        emptyId += 1;
-        collectRequestInfo(id, alisEndpoint, err.message);
-        return next();
+        return callback(null, false);
       }
-      collectRequestInfo(id, alisEndpoint, err.message);
-      return next(err);
+      return callback(err);
     }
-    if(Object.keys(record).includes('')){
-      record.empty = record[''];
-      delete record[''];
-    }
-    save(record, next);
+    record = fix(record);
+    indexRecord(record, callback);
   });
 }
-whilst(() => {
-  return emptyId < 1000;
-}, indexRecord, (err) => {
-  if (err) log.warn({ id }, err.message);
+whilst(
+  () => consistentlyEmptyIdCount < 1000,
+  (callback) => {
+    FetchAndIndexRecord({ id, alisEndpoint }, (err, found) => {
+      if (err) return callback(err);
+      if (!found) {
+        fs.writeFileSync(snapshot, `${id} ${count}`);
+        id += 1;
+        consistentlyEmptyIdCount += 1;
+        return callback();
+      }
+      consistentlyEmptyIdCount = 0;
+      count += 1;
+      fs.writeFileSync(snapshot, `${id} ${count}`);
+      id += 1;
+      return callback();
+    });
+  }, (err) => {
+    if (err) log.warn({ id }, err.message);
 });
