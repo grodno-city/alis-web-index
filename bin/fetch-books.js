@@ -40,6 +40,7 @@ function fetchAndIndexRecord(options, callback) {
       }
       return callback(err);
     }
+    log.info({ record });
     indexRecord(record, callback);
   });
 }
