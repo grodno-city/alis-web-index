@@ -42,20 +42,29 @@ function fetchAndIndexRecord(options, callback) {
     indexRecord(record, callback);
   });
 }
-whilst(
-  () => consistentlyEmptyIdCount < 1000,
-  (callback) => {
-    fetchAndIndexRecord({ id: nextId, alisEndpoint }, (err, found) => {
-      if (err) return callback(err);
-      if (found) {
-        consistentlyEmptyIdCount = 0;
-      } else {
-        consistentlyEmptyIdCount += 1;
+function start() {
+  whilst(
+    () => consistentlyEmptyIdCount < 1000,
+    (callback) => {
+      fetchAndIndexRecord({ id: nextId, alisEndpoint }, (err, found) => {
+        if (err) return callback(err);
+        if (found) {
+          consistentlyEmptyIdCount = 0;
+        } else {
+          consistentlyEmptyIdCount += 1;
+        }
+        fs.writeFileSync(snapshot, `${nextId}`);
+        nextId += 1;
+        return callback();
+      });
+    }, (err) => {
+      if (err) {
+        if (err.code === 'ECONNREFUSED') {
+          log.warn({ err, nextId }, err.message);
+          return setTimeout(start, 3000);
+        }
+        log.warn({ err, nextId }, err.message);
       }
-      fs.writeFileSync(snapshot, `${nextId}`);
-      nextId += 1;
-      return callback();
-    });
-  }, (err) => {
-    if (err) log.warn({ err, nextId }, err.message);
-});
+  });
+}
+start();
