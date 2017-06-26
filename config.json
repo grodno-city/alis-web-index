@@ -1,0 +1,6 @@
+{
+  "elasticHost": "127.0.0.1",
+  "elasticPort": 9200,
+  "index": "books",
+  "alisEndpoint": "http://86.57.174.45"
+ }

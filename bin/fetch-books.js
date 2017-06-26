@@ -1,8 +1,15 @@
+import elasticsearch from 'elasticsearch';
+import bunyan from 'bunyan';
 import whilst from 'async/whilst';
 import { getRecordByID } from '@grodno-city/alis-web-request';
 import fs from 'fs';
-import { log, alisEndpoint, index, client } from '../config';
-import { collectRequestInfo } from '../index';
+import { alisEndpoint, index, elasticHost, elasticPort } from '../config.json';
+
+const client = new elasticsearch.Client({
+  host: `${elasticHost}:${elasticPort}`,
+});
+
+const log = bunyan.createLogger({ name: 'index' });
 
 const snapshot = './bin/.fetch-books-snapshot';
 let id = 0;
