@@ -45,14 +45,12 @@ whilst(
   (callback) => {
     fetchAndIndexRecord({ id, alisEndpoint }, (err, found) => {
       if (err) return callback(err);
-      if (!found) {
-        fs.writeFileSync(snapshot, `${id} ${count}`);
-        id += 1;
+      if (found) {
+        consistentlyEmptyIdCount = 0;
+        count += 1;
+      } else {
         consistentlyEmptyIdCount += 1;
-        return callback();
       }
-      consistentlyEmptyIdCount = 0;
-      count += 1;
       fs.writeFileSync(snapshot, `${id} ${count}`);
       id += 1;
       return callback();
