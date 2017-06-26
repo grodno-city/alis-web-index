@@ -12,13 +12,13 @@ const client = new elasticsearch.Client({
 const log = bunyan.createLogger({ name: 'index' });
 
 const snapshot = './bin/.fetch-books-snapshot';
-let id = 0;
+let nextId = 1;
 let count = 0;
 let consistentlyEmptyIdCount = 0;
 if (fs.existsSync(snapshot)) {
-  const args = fs.readFileSync(snapshot, 'utf8').split(' ');
-  id = Number(args[0]) + 1;
-  count = Number(args[1]);
+  let lastFetchedId = 0;
+  [lastFetchedId, count] = fs.readFileSync(snapshot, 'utf8').split(' ');
+  nextId = lastFetchedId + 1;
 }
 
 function indexRecord(record, callback) {
@@ -47,7 +47,7 @@ function fetchAndIndexRecord(options, callback) {
 whilst(
   () => consistentlyEmptyIdCount < 1000,
   (callback) => {
-    fetchAndIndexRecord({ id, alisEndpoint }, (err, found) => {
+    fetchAndIndexRecord({ id: nextId, alisEndpoint }, (err, found) => {
       if (err) return callback(err);
       if (found) {
         consistentlyEmptyIdCount = 0;
@@ -55,10 +55,10 @@ whilst(
       } else {
         consistentlyEmptyIdCount += 1;
       }
-      fs.writeFileSync(snapshot, `${id} ${count}`);
-      id += 1;
+      fs.writeFileSync(snapshot, `${nextId} ${count}`);
+      nextId += 1;
       return callback();
     });
   }, (err) => {
-    if (err) log.warn({ err, id }, err.message);
+    if (err) log.warn({ err, nextId }, err.message);
 });
