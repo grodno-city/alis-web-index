@@ -13,13 +13,9 @@ const log = bunyan.createLogger({ name: 'index' });
 
 const snapshot = './bin/.fetch-books-snapshot';
 let nextId = 1;
-let count = 0;
 let consistentlyEmptyIdCount = 0;
 if (fs.existsSync(snapshot)) {
-  let lastFetchedId = 0;
-  [lastFetchedId, count] = fs.readFileSync(snapshot, 'utf8').split(' ').map((el) => {
-    return Number(el);
-  });
+  const lastFetchedId = Number(fs.readFileSync(snapshot, 'utf8'));
   nextId = lastFetchedId + 1;
 }
 
@@ -53,11 +49,10 @@ whilst(
       if (err) return callback(err);
       if (found) {
         consistentlyEmptyIdCount = 0;
-        count += 1;
       } else {
         consistentlyEmptyIdCount += 1;
       }
-      fs.writeFileSync(snapshot, `${nextId} ${count}`);
+      fs.writeFileSync(snapshot, `${nextId}`);
       nextId += 1;
       return callback();
     });
