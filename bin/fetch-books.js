@@ -7,16 +7,12 @@ import { collectRequestInfo } from '../index';
 const snapshot = './bin/.fetch-books-snapshot';
 let id = 0;
 let count = 0;
-try {
+let consistentlyEmptyIdCount = 0;
+if (fs.existsSync(snapshot)) {
   const args = fs.readFileSync(snapshot, 'utf8').split(' ');
   id = Number(args[0]) + 1;
   count = Number(args[1]);
 }
-catch (err) {
-  id = 0;
-  count = 0;
-}
-let consistentlyEmptyIdCount = 0;
 
 function indexRecord(record, callback) {
   client.index({
