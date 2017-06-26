@@ -29,7 +29,7 @@ function indexRecord(record, callback) {
   }, callback);
 }
 
-function FetchAndIndexRecord(options, callback) {
+function fetchAndIndexRecord(options, callback) {
   getRecordByID(options.alisEndpoint, options.id, (err, record) => {
     if (err) {
       if (err.message === 'Record not found') {
@@ -43,7 +43,7 @@ function FetchAndIndexRecord(options, callback) {
 whilst(
   () => consistentlyEmptyIdCount < 1000,
   (callback) => {
-    FetchAndIndexRecord({ id, alisEndpoint }, (err, found) => {
+    fetchAndIndexRecord({ id, alisEndpoint }, (err, found) => {
       if (err) return callback(err);
       if (!found) {
         fs.writeFileSync(snapshot, `${id} ${count}`);
@@ -58,5 +58,5 @@ whilst(
       return callback();
     });
   }, (err) => {
-    if (err) log.warn({ id }, err.message);
+    if (err) log.warn({ err, id }, err.message);
 });

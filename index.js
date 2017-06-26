@@ -76,7 +76,7 @@ export function collectRequestInfo(id, alisEndpoint, result) {
     index: 'requests',
     type: result,
     body: {
-      'record_id': id,
+      'recordId': id,
       'alisEndpoint': alisEndpoint,
       'result': result,
       'time': new Date(),
