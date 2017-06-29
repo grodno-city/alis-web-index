@@ -1,14 +1,8 @@
-import elasticsearch from 'elasticsearch';
 import bunyan from 'bunyan';
 import whilst from 'async/whilst';
-import { getRecordByID } from '@grodno-city/alis-web-request';
 import fs from 'fs';
 import request from 'request';
-import { alisEndpoint, index, elasticHost, elasticPort, lastExpectedId, mustConsistentlyEmpty } from '../config.json';
-
-const client = new elasticsearch.Client({
-  host: `${elasticHost}:${elasticPort}`,
-});
+import { alisEndpoint, lastExpectedId, mustConsistentlyEmpty } from '../config.json';
 
 const log = bunyan.createLogger({ name: 'index' });
 
