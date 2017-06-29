@@ -3,7 +3,7 @@ import bunyan from 'bunyan';
 import whilst from 'async/whilst';
 import { getRecordByID } from '@grodno-city/alis-web-request';
 import fs from 'fs';
-import { alisEndpoint, index, elasticHost, elasticPort, lastExpectedId, mustConsistentlyEmpty } from '../config.json';
+import { alisEndpoint, index, elasticHost, elasticPort, latestKnownId, allowedConsistentlyEmptyRange } from '../config.json';
 
 const client = new elasticsearch.Client({
   host: `${elasticHost}:${elasticPort}`,
@@ -38,13 +38,13 @@ function fetchAndIndexRecord(options, callback) {
       }
       return callback(err);
     }
-    log.info({ record });
+    // log.info({ record });
     indexRecord(record, callback);
   });
 }
 function start() {
   whilst(
-    () => (consistentlyEmptyIdCount < mustConsistentlyEmpty && nextId < lastExpectedId),
+    () => (consistentlyEmptyIdCount < allowedConsistentlyEmptyRange || nextId < latestKnownId),
     (callback) => {
       fetchAndIndexRecord({ id: nextId, alisEndpoint }, (err, found) => {
         if (err) return callback(err);
