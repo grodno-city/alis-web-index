@@ -1,7 +1,7 @@
 import { getRecordsByQuery, recordTypes, getRecordByID } from '@grodno-city/alis-web-request';
 import eachOfSeries from 'async/eachOfSeries';
 import { log, client, alisEndpoint, index } from './config';
-import indexSettings from './indexSettings.json';
+import indexMappings from './indexMappings.json';
 
 
 export function indexRecordsByQuery(options, callback) {
@@ -59,7 +59,7 @@ export function indexByYear(year) {
 export function createIndex(indexName, callback) {
   client.indices.create({
     index: indexName,
-    settings: indexSettings,
+    mappings: indexMappings,
   }, callback);
 }
 
