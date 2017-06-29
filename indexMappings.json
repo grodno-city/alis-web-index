@@ -1,0 +1,51 @@
+{
+  "info": {
+        "properties": {
+          "record": {
+            "properties": {
+              "belmarcId": {
+                "type": "text",
+                "index": false
+              },
+              "fields": {
+                "properties": {
+                  "tag": {
+                    "type": "text",
+                    "index": false
+                  },
+                  "value": {
+                    "type": "text",
+                    "index": false
+                  }
+                }
+              },
+              "funds": {
+                "properties": {
+                  "count": {
+                    "type": "long"
+                  },
+                  "name": {
+                    "type": "text",
+                    "index": false
+                  }
+                }
+              },
+              "id": {
+                "type": "long"
+              },
+              "references": {
+                "properties": {
+                  "tag": {
+                    "type": "long"
+                  },
+                  "value": {
+                    "type": "text",
+                    "index": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+}

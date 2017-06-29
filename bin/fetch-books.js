@@ -1,50 +1,70 @@
+import elasticsearch from 'elasticsearch';
+import bunyan from 'bunyan';
 import whilst from 'async/whilst';
-import { recordTypes } from '@grodno-city/alis-web-request';
+import { getRecordByID } from '@grodno-city/alis-web-request';
 import fs from 'fs';
-import { log, alisEndpoint, index } from '../config';
-import { indexRecordsByQuery, collectRequestInfo } from '../index';
+import { alisEndpoint, index, elasticHost, elasticPort, latestKnownId, allowedConsistentlyEmptyRange } from '../config.json';
+
+const client = new elasticsearch.Client({
+  host: `${elasticHost}:${elasticPort}`,
+});
+
+const log = bunyan.createLogger({ name: 'index' });
 
 const snapshot = './bin/.fetch-books-snapshot';
-let year;
-try {
-  year = fs.readFileSync(snapshot, 'utf8').substr(0, 4);
-}
-catch (err) {
-  year = (new Date()).getFullYear();
+let nextId = 1;
+let consistentlyEmptyIdCount = 0;
+if (fs.existsSync(snapshot)) {
+  const lastFetchedId = Number(fs.readFileSync(snapshot, 'utf8'));
+  nextId = lastFetchedId + 1;
 }
 
-let emptyYear = 0;
-
-function indexYear(next) {
-  const options = {
-    query: year,
-    queryType: 'Год издания',
-    recordType: Object.keys(recordTypes)[1],
+function indexRecord(record, callback) {
+  client.index({
     index,
-    alisEndpoint,
-  };
-  indexRecordsByQuery(options, (err, all) => {
-    log.info(year, all);
+    type: 'info',
+    id: record.id,
+    body: {
+      record,
+    },
+  }, callback);
+}
+
+function fetchAndIndexRecord(options, callback) {
+  getRecordByID(options.alisEndpoint, options.id, (err, record) => {
     if (err) {
-      if (err.message === 'no match') {
-        year -= 1;
-        emptyYear += 1;
-        fs.writeFileSync(snapshot, year);
-        collectRequestInfo(options, 'OK');
-        return next();
+      if (err.message === 'Record not found') {
+        return callback(null, false);
       }
-      collectRequestInfo(options, err.message);
-      return next(err);
+      return callback(err);
     }
-    year -= 1;
-    emptyYear = 0;
-    fs.writeFileSync(snapshot, year);
-    collectRequestInfo(options, 'OK');
-    return next();
+    // log.info({ record });
+    indexRecord(record, callback);
   });
 }
-whilst(() => {
-  return emptyYear < 10;
-}, indexYear, (err) => {
-  if (err) log.warn(err.message);
-});
+function start() {
+  whilst(
+    () => (consistentlyEmptyIdCount < allowedConsistentlyEmptyRange || nextId < latestKnownId),
+    (callback) => {
+      fetchAndIndexRecord({ id: nextId, alisEndpoint }, (err, found) => {
+        if (err) return callback(err);
+        if (found) {
+          consistentlyEmptyIdCount = 0;
+        } else {
+          consistentlyEmptyIdCount += 1;
+        }
+        fs.writeFileSync(snapshot, `${nextId}`);
+        nextId += 1;
+        return callback();
+      });
+    }, (err) => {
+      if (err) {
+        if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET') {
+          log.warn({ err, nextId }, err.message);
+          return setTimeout(start, 3000);
+        }
+        log.warn({ err, nextId }, err.message);
+      }
+  });
+}
+start();
