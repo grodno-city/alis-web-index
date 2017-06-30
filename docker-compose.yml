@@ -1,0 +1,30 @@
+version: '2'
+services:
+  index:
+    build: .
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+    depends_on:
+      - elasticsearch
+    # TODO connect volume for snapshot persistence
+
+  elasticsearch:
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
+    environment:
+      xpack.security.enabled: 'false'
+      # Start elasticsearch in development mode, to prevent following error:
+      # [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+      http.host: 0.0.0.0
+      transport.host: 127.0.0.1
+    # TODO connect volume for index persistence
+
+  kibana:
+    # https://www.elastic.co/guide/en/kibana/current/_configuring_kibana_on_docker.html
+    image: docker.elastic.co/kibana/kibana:5.4.3
+    environment:
+      XPACK_SECURITY_ENABLED: 'false'
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5601:5601

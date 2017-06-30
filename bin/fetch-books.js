@@ -3,7 +3,7 @@ import bunyan from 'bunyan';
 import whilst from 'async/whilst';
 import { getRecordByID } from '@grodno-city/alis-web-request';
 import fs from 'fs';
-import { alisEndpoint, index, elasticHost, elasticPort, latestKnownId, allowedConsistentlyEmptyRange } from '../config.json';
+import { alisEndpoint, index, elasticHost, elasticPort, latestKnownId, allowedConsistentlyEmptyRange } from '../config';
 
 const client = new elasticsearch.Client({
   host: `${elasticHost}:${elasticPort}`,
