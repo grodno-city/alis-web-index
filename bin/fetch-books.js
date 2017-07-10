@@ -1,13 +1,8 @@
-import elasticsearch from 'elasticsearch';
 import bunyan from 'bunyan';
 import whilst from 'async/whilst';
 import { getRecordByID } from '@grodno-city/alis-web-request';
 import fs from 'fs';
-import { alisEndpoint, index, elasticHost, elasticPort, latestKnownId, allowedConsistentlyEmptyRange } from '../config.json';
-
-const client = new elasticsearch.Client({
-  host: `${elasticHost}:${elasticPort}`,
-});
+import { alisEndpoint, latestKnownId, allowedConsistentlyEmptyRange } from '../config.json';
 
 const log = bunyan.createLogger({ name: 'index' });
 
@@ -19,27 +14,17 @@ if (fs.existsSync(snapshot)) {
   nextId = lastFetchedId + 1;
 }
 
-function indexRecord(record, callback) {
-  client.index({
-    index,
-    type: 'info',
-    id: record.id,
-    body: {
-      record,
-    },
-  }, callback);
-}
-
 function fetchAndIndexRecord(options, callback) {
   getRecordByID(options.alisEndpoint, options.id, (err, record) => {
     if (err) {
       if (err.message === 'Record not found') {
+        log.warn('Record not found');
         return callback(null, false);
       }
       return callback(err);
     }
-    // log.info({ record });
-    indexRecord(record, callback);
+    log.info({ record }, 'OK');
+    return callback();
   });
 }
 function start() {
