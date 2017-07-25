@@ -19,9 +19,10 @@
     "eslint-plugin-import": "^2.3.0"
   },
   "scripts": {
-    "start": "babel-node -- consumer.js",
+    "start": "babel-node -- ./bin/fetch-books.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fetch-books": "babel-node -- ./bin/fetch-books.js",
+    "indexRecords": "babel-node -- consumer.js",
     "lint": "eslint index.js"
   },
   "repository": {
