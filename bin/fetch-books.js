@@ -6,14 +6,6 @@ import { alisEndpoint, latestKnownId, allowedConsistentlyEmptyRange } from '../c
 
 const log = bunyan.createLogger({ name: 'index' });
 
-const snapshot = './bin/.fetch-books-snapshot';
-let nextId = 1;
-let consistentlyEmptyIdCount = 0;
-if (fs.existsSync(snapshot)) {
-  const lastFetchedId = Number(fs.readFileSync(snapshot, 'utf8'));
-  nextId = lastFetchedId + 1;
-}
-
 function fetchAndIndexRecord(options, callback) {
   getRecordByID(options.alisEndpoint, options.id, (err, record) => {
     if (err) {
@@ -27,7 +19,10 @@ function fetchAndIndexRecord(options, callback) {
     return callback();
   });
 }
-function start() {
+
+export default function start({ nextId, snapshot }) {
+  let consistentlyEmptyIdCount = 0;
+
   whilst(
     () => (consistentlyEmptyIdCount < allowedConsistentlyEmptyRange || nextId < latestKnownId),
     (callback) => {
@@ -52,4 +47,3 @@ function start() {
       }
   });
 }
-start();
